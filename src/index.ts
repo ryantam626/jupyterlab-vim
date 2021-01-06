@@ -206,6 +206,25 @@ function activateCellVim(
       );
     }
 
+    commands.addCommand('smart-exit', {
+      label: 'Exit but smart',
+      execute: args => {
+        const current = getCurrent(args);
+        if (current) {
+          const { content } = current;
+          if (content.activeCell !== null) {
+            let editor = content.activeCell.editor as CodeMirrorEditor;
+            const vim = editor.editor.state.vim;
+            if (vim.visualMode || vim.insertMode || vim.inputState.operator !== null || vim.inputState.motion !== null || vim.inputState.keyBuffer.length != 0) {
+              (CodeMirror as any).Vim.handleKey(editor.editor, '<Esc>');
+            } else {
+              commands.execute('notebook:enter-command-mode')
+            }
+          }
+        }
+      },
+      isEnabled
+    });
     commands.addCommand('run-select-next-edit', {
       label: 'Run Cell and Edit Next Cell',
       execute: args => {
@@ -402,6 +421,106 @@ function activateCellVim(
       isEnabled
     });
 
+    commands.addCommand("sublime:subword-backward-deletion", {
+      execute: () => {
+        const cEditor = (tracker.activeCell!.editor as CodeMirrorEditor).editor;
+        const doc = cEditor.getDoc();
+        const starts = doc.listSelections();
+        // NOTE: This is non-trivial to deal with, results are often ugly, let's ignore this.
+        if (starts.some((pos: { head: { ch: any; }; anchor: { ch: any; }; }) => (pos.head.ch !== pos.anchor.ch))) {
+          // tslint:disable-next-line:no-console
+          console.log("Ignored attempt to delete subword!");
+          return;
+        }
+        // CAV: To make sure when we undo this operation, we have carets showing in
+        //      their rightful positions.
+        cEditor.execCommand("goSubwordLeft");
+        const ends = doc.listSelections();
+        doc.setSelections(starts);
+        if (starts.length !== ends.length) {
+          // NOTE: Edge case where select are part of the same subword, need more thoughts on this.)
+          // tslint:disable-next-line:no-console
+          console.log("Inogred attempt to delete subword, because some selection is part of the same subword");
+          return;
+        }
+        cEditor.operation(() => {
+          for (let i = 0; i < starts.length; i++) {
+            doc.replaceRange("", starts[i].head, ends[i].head, "+delete");
+          }
+        });
+      },
+      label: "Subward backward deletion",
+    });
+    commands.addKeyBinding({
+      command: "sublime:subword-backward-deletion",
+      keys: ["Alt Backspace"],
+      selector: ".jp-Notebook-cell .CodeMirror-focused",
+    });
+
+    commands.addCommand("sublime:subword-forward-deletion", {
+      execute: () => {
+        const cEditor = (tracker.activeCell!.editor as CodeMirrorEditor).editor;
+        const doc = cEditor.getDoc();
+        const starts = doc.listSelections();
+        // NOTE: This is non-trivial to deal with, results are often ugly, let's ignore this.
+        if (starts.some((pos: { head: { ch: any; }; anchor: { ch: any; }; }) => (pos.head.ch !== pos.anchor.ch))) {
+          // tslint:disable-next-line:no-console
+          console.log("Ignored attempt to delete subword!");
+          return;
+        }
+        // CAV: To make sure when we undo this operation, we have carets showing in
+        //      their rightful positions.
+        cEditor.execCommand("goSubwordRight");
+        const ends = doc.listSelections();
+        doc.setSelections(starts);
+        if (starts.length !== ends.length) {
+          // NOTE: Edge case where select are part of the same subword, need more thoughts on this.)
+          // tslint:disable-next-line:no-console
+          console.log("Inogred attempt to delete subword, because some selection is part of the same subword");
+          return;
+        }
+        cEditor.operation(() => {
+          for (let i = 0; i < starts.length; i++) {
+            doc.replaceRange("", starts[i].head, ends[i].head, "+delete");
+          }
+        });
+      },
+      label: "Subward forward deletion",
+    });
+
+    commands.addCommand("hack:go-subword-left", {
+      execute: () => {
+        (tracker.activeCell!.editor as CodeMirrorEditor).editor.execCommand("goSubwordLeft");
+      }
+    })
+    commands.addKeyBinding({
+      command: "hack:go-subword-left",
+      keys: ["Alt Left"],
+      selector: ".jp-Notebook-cell .CodeMirror-focused",
+    });
+
+    commands.addCommand("hack:go-subword-right", {
+      execute: () => {
+        (tracker.activeCell!.editor as CodeMirrorEditor).editor.execCommand("goSubwordRight");
+      }
+    })
+    commands.addKeyBinding({
+      command: "hack:go-subword-right",
+      keys: ["Alt Right"],
+      selector: ".jp-Notebook-cell .CodeMirror-focused",
+    });
+
+    commands.addKeyBinding({
+      command: "sublime:subword-forward-deletion",
+      keys: ["Alt Delete"],
+      selector: ".jp-Notebook-cell .CodeMirror-focused",
+    });
+
+    commands.addKeyBinding({
+      selector: '.jp-Notebook.jp-mod-editMode',
+      keys: ['Escape'],
+      command: 'smart-exit'
+    });
     commands.addKeyBinding({
       selector: '.jp-Notebook.jp-mod-editMode',
       keys: ['Ctrl O', 'U'],
@@ -472,11 +591,6 @@ function activateCellVim(
       selector: '.jp-Notebook.jp-mod-editMode',
       keys: ['Ctrl K'],
       command: 'select-above-execute-markdown'
-    });
-    commands.addKeyBinding({
-      selector: '.jp-Notebook.jp-mod-editMode',
-      keys: ['Escape'],
-      command: 'leave-insert-mode'
     });
     commands.addKeyBinding({
       selector: '.jp-Notebook.jp-mod-editMode',
