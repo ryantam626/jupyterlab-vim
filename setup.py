@@ -33,7 +33,7 @@ package_data_spec = {
     ]
 }
 
-labext_name = "@axlair/jupyterlab_vim"
+labext_name = "@ryantam626/jupyterlab_vim"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
@@ -54,9 +54,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup_args = dict(
-    name=name,
+    name="ryantam626_"+name,
     version=version,
-    url="https://github.com/axelfahy/jupyterlab-vim.git",
+    url="https://github.com/ryantam626/jupyterlab-vim.git",
     author="Jupyterlab-vim contributors",
     description="Code cell vim bindings",
     long_description= long_description,
