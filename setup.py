@@ -33,7 +33,7 @@ package_data_spec = {
     ]
 }
 
-labext_name = "@ryantam626/jupyterlab_vim"
+labext_name = "@axlair/jupyterlab_vim"
 
 data_files_spec = [
     ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
