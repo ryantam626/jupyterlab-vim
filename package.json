@@ -6,13 +6,13 @@
   "license": "MIT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "homepage": "https://github.com/jupyterlab-contrib/jupyterlab-vim",
+  "homepage": "https://github.com/ryantam626/jupyterlab-vim",
   "bugs": {
-    "url": "https://github.com/jupyterlab-contrib/jupyterlab-vim/issues"
+    "url": "https://github.com/ryantam626/jupyterlab-vim/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jupyterlab-contrib/jupyterlab-vim.git"
+    "url": "https://github.com/ryantam626/jupyterlab-vim.git"
   },
   "keywords": [
     "extension",

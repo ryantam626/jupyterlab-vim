@@ -33,7 +33,7 @@ long_description = (HERE / "README.md").read_text()
 pkg_json = json.loads((HERE / "package.json").read_bytes())
 
 setup_args = dict(
-    name=name,
+    name="ryantam626_"+ name,
     version=pkg_json["version"],
     url=pkg_json["homepage"],
     author="Jupyterlab-vim contributors",
