@@ -159,7 +159,7 @@ export function addJLabCommands(
               vim.visualMode ||
               vim.inputState.operator !== null ||
               vim.inputState.motion !== null ||
-              vim.inputState.keyBuffer.length != 0
+              vim.inputState.keyBuffer.length !== 0
             ) {
               (CodeMirror as any).Vim.handleKey(editor.editor, '<Esc>');
             } else {
@@ -255,6 +255,122 @@ export function addJLabCommands(
         }
       },
       isEnabled
+    }),
+    commands.addCommand('hack:subword-backward-deletion', {
+      label: 'Subword backward deletion',
+      execute: args => {
+        const current = getCurrent(args);
+        if (current) {
+          const { content } = current;
+          if (content.activeCell !== null) {
+            const cEditor = (content.activeCell.editor as CodeMirrorEditor)
+              .editor;
+            const doc = cEditor.getDoc();
+            const starts = doc.listSelections();
+            // NOTE: This is non-trivial to deal with, results are often ugly, let's ignore this.
+            if (
+              starts.some(
+                (pos: { head: { ch: any }; anchor: { ch: any } }) =>
+                  pos.head.ch !== pos.anchor.ch
+              )
+            ) {
+              // tslint:disable-next-line:no-console
+              console.log('Ignored attempt to delete subword!');
+              return;
+            }
+            // CAV: To make sure when we undo this operation, we have carets showing in
+            //      their rightful positions.
+            cEditor.execCommand('goSubwordLeft');
+            const ends = doc.listSelections();
+            doc.setSelections(starts);
+            if (starts.length !== ends.length) {
+              // NOTE: Edge case where select are part of the same subword, need more thoughts on this.)
+              // tslint:disable-next-line:no-console
+              console.log(
+                'Ignored attempt to delete subword, because some selection is part of the same subword'
+              );
+              return;
+            }
+            cEditor.operation(() => {
+              for (let i = 0; i < starts.length; i++) {
+                doc.replaceRange('', starts[i].head, ends[i].head, '+delete');
+              }
+            });
+          }
+        }
+      }
+    }),
+    commands.addCommand('hack:subword-forward-deletion', {
+      label: 'Subword forward deletion',
+      execute: args => {
+        const current = getCurrent(args);
+        if (current) {
+          const { content } = current;
+          if (content.activeCell !== null) {
+            const cEditor = (content.activeCell.editor as CodeMirrorEditor)
+              .editor;
+            const doc = cEditor.getDoc();
+            const starts = doc.listSelections();
+            // NOTE: This is non-trivial to deal with, results are often ugly, let's ignore this.
+            if (
+              starts.some(
+                (pos: { head: { ch: any }; anchor: { ch: any } }) =>
+                  pos.head.ch !== pos.anchor.ch
+              )
+            ) {
+              // tslint:disable-next-line:no-console
+              console.log('Ignored attempt to delete subword!');
+              return;
+            }
+            // CAV: To make sure when we undo this operation, we have carets showing in
+            //      their rightful positions.
+            cEditor.execCommand('goSubwordRight');
+            const ends = doc.listSelections();
+            doc.setSelections(starts);
+            if (starts.length !== ends.length) {
+              // NOTE: Edge case where select are part of the same subword, need more thoughts on this.)
+              // tslint:disable-next-line:no-console
+              console.log(
+                'Ignored attempt to delete subword, because some selection is part of the same subword'
+              );
+              return;
+            }
+            cEditor.operation(() => {
+              for (let i = 0; i < starts.length; i++) {
+                doc.replaceRange('', starts[i].head, ends[i].head, '+delete');
+              }
+            });
+          }
+        }
+      }
+    }),
+    commands.addCommand('hack:go-subword-left', {
+      label: 'Go subword left',
+      execute: args => {
+        const current = getCurrent(args);
+        if (current) {
+          const { content } = current;
+          if (content.activeCell !== null) {
+            const cEditor = (content.activeCell.editor as CodeMirrorEditor)
+              .editor;
+            cEditor.execCommand('goSubwordLeft');
+          }
+        }
+      }
+    }),
+    commands.addCommand('hack:go-subword-right', {
+      label: 'Go subword right',
+      execute: args => {
+        const current = getCurrent(args);
+        if (current) {
+          const { content } = current;
+          if (content.activeCell !== null) {
+            const cEditor = (content.activeCell.editor as CodeMirrorEditor)
+              .editor;
+            cEditor.execCommand('goSubwordRight');
+          }
+        }
+      }
     })
   ];
   return addedCommands;
