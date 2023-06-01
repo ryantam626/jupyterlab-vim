@@ -152,11 +152,14 @@ export function addJLabCommands(
           const { content } = current;
           if (content.activeCell !== null) {
             const editor = content.activeCell.editor as CodeMirrorEditor;
-
+            const vim = editor.editor.state.vim;
             // Get the current editor state
             if (
-              editor.editor.state.vim.insertMode ||
-              editor.editor.state.vim.visualMode
+              vim.insertMode ||
+              vim.visualMode ||
+              vim.inputState.operator !== null ||
+              vim.inputState.motion !== null ||
+              vim.inputState.keyBuffer.length != 0
             ) {
               (CodeMirror as any).Vim.handleKey(editor.editor, '<Esc>');
             } else {
